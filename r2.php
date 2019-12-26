@@ -257,7 +257,13 @@ class R2
      */
     public function rm(string $file)
     {
-        return unlink($this->cwd . $file) . PHP_EOL;
+        if(substr($this->cwd, -1) == DIRECTORY_SEPARATOR) {
+            return unlink($this->cwd . $file) . PHP_EOL;
+            
+        }
+        else {
+            return unlink($this->cwd . DIRECTORY_SEPARATOR . $file) . PHP_EOL;
+        }
     }
     public function serial($data)
     {
