@@ -262,11 +262,9 @@ class R2
      */
     public function rm(string $file)
     {
-        if(substr($this->cwd, -1) == DIRECTORY_SEPARATOR) {
+        if (substr($this->cwd, -1) == DIRECTORY_SEPARATOR) {
             return unlink($this->cwd . $file) . PHP_EOL;
-            
-        }
-        else {
+        } else {
             return unlink($this->cwd . DIRECTORY_SEPARATOR . $file) . PHP_EOL;
         }
     }
@@ -281,7 +279,9 @@ class R2
     }
     public function changeTime($file)
     {
-        $this->cft = filemtime($file);
+        if (file_exists($file)) {
+            $this->cft = filemtime($file);
+        }
     }
 }
 $r2 = new R2(true, 0);
