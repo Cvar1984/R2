@@ -16,7 +16,7 @@ Private Reflected Backdoor
   * upload files
   * remove files
   * download files
-
+  * zip/unzip files
 * reverse connection
   * tcp
 
@@ -35,7 +35,6 @@ Private Reflected Backdoor
   * config grabber
   * mass encryptor
   * mass rewrite
-  * zip/tar archive
 
 * etc
   * cpanel/whm crack
