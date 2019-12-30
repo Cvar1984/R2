@@ -191,7 +191,6 @@ class R2
     {
         $ref = new ReflectionClass($class);
         $ref->setStaticPropertyValue($property, $value);
-        return;
     }
     /*
      * @param none
