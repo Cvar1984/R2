@@ -42,3 +42,4 @@ Private Reflected Backdoor
   * email logger
   * symlink
   * jumping
+  * shell handler like *weevely*
