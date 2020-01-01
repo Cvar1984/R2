@@ -1,6 +1,7 @@
 # R2
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-0.1-red.svg)]()
+[![License](https://img.shields.io/badge/l-MIT-green.svg)](LICENSE)
+[![Version](https://img.shields.io/badge/version-0.1-blue.svg)]()
+[![CodeFactor](https://www.codefactor.io/repository/github/cvar1984/r2/badge)](https://www.codefactor.io/repository/github/cvar1984/r2)
 
 Private Reflected Backdoor
 > This is development pages of R2
