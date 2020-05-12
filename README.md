@@ -6,6 +6,10 @@
 Handy webshell with minimalistic features
 
 > Please obfuscate by yourself
+## Demo
+[cd-ls](assets/images/cd-ls.jpg)
+[help](assets/images/help.jpg)
+[debug](assets/images/debug.jpg)
 
 ## Features
 * file manipulation

