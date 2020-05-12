@@ -3,8 +3,7 @@
 [![Version](https://img.shields.io/badge/version-0.1-blue.svg)]()
 [![CodeFactor](https://www.codefactor.io/repository/github/cvar1984/r2/badge)](https://www.codefactor.io/repository/github/cvar1984/r2)
 
-Private Reflected Backdoor
-> This is development pages of R2
+Handy webshell with minimalistic features
 
 > Please obfuscate by yourself
 
